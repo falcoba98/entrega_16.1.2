@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscador de Bebidas</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+        background-color: plum;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <h1 class="text-center">Buscador de Cócteles</h1>
+    <div class="d-flex justify-content-center mt-4">
+      <input id="search-input" type="text" class="form-control w-50" placeholder="Escribe el nombre del cóctel">
+      <button id="search-btn" class="btn btn-primary ms-3">Buscar</button>
+    </div>
+    <div id="results" class="mt-5 row"></div>
+  </div>
+
+  <script>
+    document.getElementById('search-btn').addEventListener('click', () => {
+      const query = document.getElementById('search-input').value.trim();
+      if (query) {
+        buscarBebidas(query);
+      }
+    });
+
+    async function buscarBebidas(nombre) {
+      const url = `https://www.thecocktaildb.com/api/json/v1/1/search.php?s=${encodeURIComponent(nombre)}`;
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        mostrarResultados(data.drinks);
+      } catch (error) {
+        console.error('Error al buscar bebidas:', error);
+      }
+    }
+
+    function mostrarResultados(drinks) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+
+      if (!drinks) {
+        resultsDiv.innerHTML = '<p class="text-center">No se encontraron bebidas.</p>';
+        return;
+      }
+
+      drinks.forEach(drink => {
+        const drinkCard = `
+          <div class="col-md-4 mb-4">
+            <div class="card">
+              <img src="${drink.strDrinkThumb}" class="card-img-top" alt="${drink.strDrink}">
+              <div class="card-body">
+                <h5 class="card-title">${drink.strDrink}</h5>
+                <p class="card-text"><strong>Categoría:</strong> ${drink.strCategory}</p>
+                <p class="card-text"><strong>Instrucciones:</strong> ${drink.strInstructions}</p>
+                <p class="card-text"><strong>Ingredientes:</strong> ${obtenerIngredientes(drink)}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        resultsDiv.innerHTML += drinkCard;
+      });
+    }
+
+    function obtenerIngredientes(drink) {
+      let ingredientes = [];
+      for (let i = 1; i <= 15; i++) {
+        const ingrediente = drink[`strIngredient${i}`];
+        const medida = drink[`strMeasure${i}`];
+        if (ingrediente) {
+          ingredientes.push(`${medida ? medida : ''} ${ingrediente}`.trim());
+        }
+      }
+      return ingredientes.join(', ');
+    }
+  </script>
+</body>
+</html>
